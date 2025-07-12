@@ -43,6 +43,7 @@ b {
 }
 
 p {
+    text-indent: 2em;
     margin-bottom: 12px;
 }
 
@@ -60,122 +61,312 @@ pre {
 }
 </style>
 
-```{r setup, include=FALSE, echo=FALSE, results='hide'}
+```{r setup, include=FALSE}
     knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r, message=FALSE, echo=FALSE, results='hide'}
-    library(dplyr)
-    library(readr)
-    library(ggplot2)
-    library(stringr)
-```
-
-```{r, echo=FALSE, results='hide'}
-    setwd("C:/Users/rapha/Desktop/estatistica/dataset")
-    dados <- read.csv("dataset.csv", dec=".", sep=",", header=T)
-```
-
-```{r, echo=FALSE, results='hide'}
-    glimpse(dados)
-```
-
-```{r, echo=FALSE, results='hide'}
-    dados_selecionados <- dados[ , c("Rooms", "Price", "Postcode", "Bathroom", "Car", "Landsize", "BuildingArea", "Lattitude", "SellerG", "Method", "Type")]
-    head(dados_selecionados)
-```
-
 <h1>Dataset: Melbourne Housing Snapshot</h1>
+<p><i>Análise do Mercado Imobiliário de Melbourne</i></p>
+
+<div>
+<h1><b>INTRODUÇÃO</b></h1>
+<p>O mercado imobiliário é uma área muito abrangente, interessante e importante, a qual vem crescendo cada vez mais em todo o mundo, dessa maneira surge o problema de analisar qual a melhor opção de imóvel considerando inúmeras variáveis, que são relativas a cada pessoa, com isso em mente, nosso objetivo é trazer um recurso de análise trabalhando com a estatística descritiva de modo a auxiliar na decisão de escolha por um imóvel que faça mais sentido em cada contexto. Este dataset se destaca pela sua riqueza em variáveis que contribui para um estudo estatístico mais preciso e proveitoso, tornando a análise descritiva ainda mais eficaz, esta base de dados contempla imóveis exclusivamente de uma região da Austrália chamada “Melbourne”, no entanto como as variáveis são em geral padronizadas globalmente, é possível aplicar os mesmos métodos para outros regiões, assim priorizamos o estudo especificamente do nicho imobiliário e não restritamente da cidade de Melbourne.</p>
+</div>
+
+<div>
+<h1><b>METODOLOGIA</b></h1>
+<p>Para a realização deste estudo foi utilizado como recurso principal o dataset – base de dados – cujo título é: “Melbourne Housing Snapshot”, que contempla dados a respeito de transações imobiliárias que ocorreram na região de Melbourne, capital costeira do estado de Victoria, no sudeste da Austrália. A base de dados em questão foi retirada da plataforma online chamada “Kaggle”.</p>
+<p>Para possibilitar o desenvolvimento desse trabalho contamos com o auxílio de uma sequência ferramentas, dentre elas podemos citar:</p>
+<ul>
+<li>Linguagem de programação R: A linguagem R é uma linguagem de programação e ambiente de software projetado para computação estatística e gráficos. Criada por Ross Ihaka e Robert Gentleman em 1993, é amplamente utilizada para análise de dados, modelagem estatística e visualização gráfica. </li>
+<li>Ambiente RStudio: RStudio é um software livre de ambiente de desenvolvimento integrado para R. </li>
+<li>R-Markdown: O Markdown é uma linguagem pensada para a escrita de textos em que são criadas marcações para títulos, links, códigos de um modo conciso e legível. </li>
+<li>Bibliotecas: 
+<ul>
+<li>Dplyr: O dplyr é o pacote mais útil para realizar transformação de dados, aliando simplicidade e eficiência de uma forma elegante. Os scripts em R que fazem uso inteligente dos verbos dplyr e as facilidades do operador pipe tendem a ficar mais legíveis e organizados, sem perder velocidade de execução.</li>
+<li>Readr: O pacote {readr} do tidyverse é utilizado para importar arquivos de texto, como .txt ou .csv, para o R.</li>
+<li>Ggplot2: A construção de gráficos no R foi revolucionada com a criação do pacote ggplot2, fruto da tese de doutorado do Hadley Wickham. Essa revolução teve base na filosofia que Hadley adotou para responder a pergunta “O que é um gráfico estatístico?”.</li>
+<li>Stringr: O R básico não tem uma sintaxe consistente para trabalhar com textos. O pacote stringr ajuda a realizar todas as tarefas básicas de manipulação de texto, exigindo que o usuário estude apenas uma sintaxe.</li>
+</ul>
+</li>
+</ul>
+<p>O Procedimento adotado para a realização da análise foi dividida em tipos de gráficos, cálculo de medidas de posição e dispersão, e na criação de gráficos baseados no dataset trabalhado para visualizar a distribuição e as relações entre as variáveis.</p>
+</div>
+
+<h1>Preparando o Ambiente</h1>
+
+<h4>Carrega as Dependências - Bibliotecas</h4>
+```{r, message=FALSE}
+library(dplyr)
+library(readr)
+library(ggplot2)
+library(stringr)
+library(lubridate)
+library(scales)
+```
+
+<h4>Define o Work Dir - Diretório de Trabalho</h4>
+```{r}
+setwd("C:/Users/rapha/Desktop/estatistica/dataset")
+```
+
+<h4>Carrega o dataset em 'dados' - Base de Dados</h4>
+```{r}
+dados <- read.csv("dataset.csv", dec=".", sep=",", header=T)
+```
+
+<h4>Filtro de Colunas - 'dados_selecionados' conterá apenas as colunas as quais serão aproveitadas</h4>
+```{r}
+dados_selecionados <- dados[ , c("Rooms", "Price", "Postcode", "Bathroom", "Car", "Landsize", "BuildingArea", "Lattitude", "Distance",  "SellerG", "Method", "Type", "Date")]
+```
+
+<h4>Renomeia a coluna 'Date' para evitar conflitos de nome</h4>
+```{r}
+dados_selecionados <- dados_selecionados %>%
+rename(Date_op = Date)
+```
+
+<h4>Gera um Resumo do Dataset - contém o número de linhas, colunas, o nome e tipo das colunas e as primeiras observações de cada coluna.</h4>
+```{r}
+glimpse(dados_selecionados)
+```
 
 <h1>Capítulo 1 – Estatística Descritiva</h1>
 
-<h2><b>1.1 CONCEITOS INICIAIS</b></h2>
-
-<h3>1.1.1 O que é Estatística?</h3>
-<p>A estatística é uma parte da matemática aplicada que fornece métodos para planejar experimentos, obter dados e organiza-los, resumi-los, analisa-los, e interpreta-los e deles extrair conclusões.</p>
-
-<h3>1.1.2 Qual a diferença entre população e amostra?</h3>
-<ul>
-    <li><b>População:</b> é o conjunto de elementos que têm, em comum, determinada característica (pessoas, coisas, objetos).</li>
-    <li><b>Amostra:</b> é todo subconjunto não vazio e com menor número de elementos do que o conjunto definido como população.</li>
-    <li><b>Tendenciosidade:</b> todos os elementos da população tem que ter a mesma chance de fazer parte da amostra. Se existir elementos com maior ou menor possibilidade de participar da amostra então há tendenciosidade.</li>
-</ul>
-
-<h3>1.1.3 O que são dados e variáveis?</h3>
-<ul>
-    <li><b>Dados:</b> são informações obtidas, seja com base nos elementos que constituem a população, seja com base nos elementos que constituem a amostra.</li>
-    <li><b>Variáveis (xi):</b> é convencionalmente, o conjunto de resultados possíveis de um fenômeno.</li>
-</ul>
-
-<h2><b>1.2 CLASSIFICAÇÃO DAS VARIÁVEIS</b></h2>
-<ul>
-    <li><b>Qualitativas:</b> são qualidades (ou atributos) podem ser separados em diferentes categorias que se distinguem por alguma característica não numérica.</li>
-    <ul>
-        <li><b>Nominais:</b> dados nominais são aqueles em que as categorias não possuem nenhuma ordem intrínseca, como cores ou tipos de carros.</li>
-        <li><b>Ordinais:</b> dados ordinais possuem uma ordem natural entre suas categorias, como níveis de escolaridade ou grau de satisfação</li>
-    </ul>
-    <li><b>Quantitativas:</b> são números que representam contagens ou medidas, e podem ser: </li>
-    <ul>
-        <li><b>Contínuas:</b> variável que assume, teoricamente, qualquer valor entre dois limites (medidas por algum aparelho).</li>
-        <li><b>Discretas:</b> variável resultante de um conjunto finito de valores possíveis (contagens ou enumerações)</li>
-    </ul>
-</ul>
-
-<h2><b>1.3 COLETA, ORGANIZAÇÃO E APRESENTAÇÃO DE DADOS</b></h2>
-<h3>1.3.1 Dados brutos vs. dados elaborados.</h3>
-<ul>
-    <li><b>Dados brutos:</b> dados coletados de forma sem ordenação e sem nenhum tipo de arranjo sistemático.</li>
-    <li><b>Dados elaborados:</b> dados que sofreram uma simples organização (ordenação).</li>
-</ul>
-
-<h3>1.3.2 Tabelas de frequência para:</h3>
-<ul>
-    <li>Qualitativas nominais.</li>
-    <li>Quantitativas discretas.</li>
-    <li>Quantitativas contínuas (com classes).</li>
-</ul>
-
-<h2><b>1.4 TIPOS DE FREQUÊNCIA</b></h2>
-<ul>
-    <li><b>Frequência absoluta (fi):</b> são os dados estatísticos resultantes da coleta direta da fonte, sem outra manipulação senão a contagem ou medida.</li>
-    <li><b>Frequência relativa (fr):</b> são os resultados de comparações por quociente (razões) que se estabeleça entre os dados absolutos e têm por finalidade realçar ou facilitar as comparações entre quantidades.</li>
-    <li><b>Frequência percentual (fp):</b> traduzem-se os dados relativos, em geral, por meio de percentagens, índices, coeficientes e taxas.</li>
-</ul>
-
-<h2><b>1.5 TIPOS DE GRÁFICOS</b></h2>
-<h3>1.5.1 O que é um gráfico?</h3>
+<h3><i>O que é um gráfico?</i></h3>
 <p>É uma forma de apresentação dos dados estatísticos, cujo objetivo é o de produzir, uma impressão mais rápida e viva do fenômeno em estudo, já que os gráficos falam mais rápido à compreensão que as tabelas.</p>
+
+<div>
+<h2><b>1 TIPOS DE GRÁFICOS</b></h2>
 <ul>
-    <li><b>Gráfico em colunas ou em barras:</b></li>
-    <ul>
-        <li><b>Gráfico de barras:</b> quando em barras, os retângulos têm a mesma base e as alturas são proporcionais aos respectivos dados.</li>
-        
-```{r, echo=FALSE}
-    ggplot(data = dados_selecionados, aes(x = Method)) + 
-    geom_bar(fill = "#2b6cb0", alpha = 0.8) + 
-    geom_text(stat = 'count', aes(label = after_stat(count)), hjust = -0.2) + 
-    labs(title = "Quantidade de Imóveis por Método de Venda", x = "Método de Venda", y = "Quantidade (Frequência Absoluta)") + 
-    theme_minimal() + 
-    coord_flip()
+    <li>
+        <h3>1.1 Gráfico de barras:</h3> 
+        <p>Quando em barras, os retângulos têm a mesma base e as alturas são proporcionais aos respectivos dados.</p>
+    </li>
+    <h4><i>Código para plotar o gráfico de barras: </i></h4>
+```{r}
+ggplot(data = dados_selecionados, aes(x = Method)) + 
+geom_bar(fill = "#2b6cb0", alpha = 0.8) + 
+geom_text(stat = 'count', aes(label = after_stat(count)), hjust = -0.2) + 
+labs(title = "Quantidade de Imóveis por Método de Venda", x = "Método de Venda", y = "Quantidade (Frequência Absoluta)") + 
+theme_minimal() + 
+coord_flip()
 ```
-        
-        <li><b>Gráfico de colunas:</b> quando em colunas, os retângulos têm a mesma altura e os comprimentos são proporcionais aos respectivos dados.</li>
-        
-```{r, echo=FALSE, message=FALSE}
-    top_5_vendedores <- dados_selecionados %>%
-    count(SellerG, sort = TRUE) %>%
-    top_n(5)
-
-    ggplot(data = top_5_vendedores, aes(x = reorder(SellerG, n), y = n)) +
-    geom_col(fill = "#2b6cb0", alpha = 0.8) +
-    geom_text(aes(label = n), hjust = -0.2) +
-    labs(title = "Top 5 Vendedores por Quantidade de Imóveis", x = "Vendedor", y = "Quantidade de Imóveis") +
-    theme_minimal()
+    <hr>
+    <li>
+        <h3>1.2 Gráfico de colunas:</h3> 
+        <p>Quando em colunas, os retângulos têm a mesma altura e os comprimentos são proporcionais aos respectivos dados.</p>
+    </li>
+    <h4><i>Código para plotar o gráfico de colunas: </i></h4>
+```{r, message=FALSE}
+top_5_vendedores <- dados_selecionados %>%
+count(SellerG, sort = TRUE) %>%
+top_n(5)
+ggplot(data = top_5_vendedores, aes(x = reorder(SellerG, n), y = n)) +
+geom_col(fill = "#2b6cb0", alpha = 0.8) +
+geom_text(aes(label = n), hjust = -0.2) +
+labs(title = "Top 5 Vendedores por Quantidade de Imóveis", x = "Vendedor", y = "Quantidade de Imóveis") +
+theme_minimal()
 ```
+    <hr>
+    <li>
+        <h3>1.3 Gráfico de setores (pizza):</h3>
+        <p>Este gráfico é constituído com base em um circulo.</p>
+    </li>
+    <h4><i>Código para plotar o gráfico de setores: </i></h4>
+```{r, message=FALSE}
+dados_pizza <- dados_selecionados %>%
+count(Type, name = "Contagem") %>%
+mutate(Percentual = Contagem / sum(Contagem) * 100) %>%
+arrange(desc(Type)) %>%
+mutate(PosicaoLabel = cumsum(Percentual) - 0.5 * Percentual)
 
-    </ul>
-    <li><b>Gráfico de setores (pizza):</b>Este gráfico é constituído com base em um circulo.</li>
-    <li><b>Histograma:</b> gráfico formado por retângulos cujas bases são proporcional ás amplitudes de classes e as alturas proporcionais às frequências.</li>
-    <li><b>Polígono de frequência:</b> gráfico de linhas que une os pontos médios das classes no topo dos retângulos.</li>
-    <li><b>Ogiva (para dados contínuos):</b> gráficos de frequências acumuladas (“abaixo de” e “acima de”).</li>
+print(dados_pizza)
+
+ggplot(dados_pizza, aes(x = "", y = Percentual, fill = Type)) +
+# Cria a barra empilhada. 'stat="identity"' usa os valores da coluna Y diretamente.
+geom_bar(stat = "identity", width = 1, color = "white") +
+
+coord_polar("y", start = 0) +
+
+geom_text(aes(y = PosicaoLabel, label = paste0(round(Percentual, 1), "%")), color = "black", size = 5) +
+
+theme_void() +
+
+labs(
+title = "Distribuição de Imóveis por Tipo",
+subtitle = "Análise do dataset Melbourne Housing Snapshot",
+fill = "Tipo de Imóvel" # Título da legenda
+) +
+
+scale_fill_brewer(palette = "Pastel1")
+```
+    <hr>
+    <li>
+        <h3>1.4 Gráfico de linhas:</h3>
+        <p>Um gráfico de linhas, também conhecido como gráfico de curvas, é uma representação gráfica usada para exibir pontos de dados conectados por linhas retas.</p>
+    </li>
+    <h4><i>Código para plotar o gráfico de linhas: </i></h4>
+```{r}
+x <- c(1:5); y <- x # create some data
+par(pch=22, col="red") # plotting symbol and color
+par(mfrow=c(2,4)) # all plots on one page
+opts = c("p","l","o","b","c","s","S","h")
+for(i in 1:length(opts)){
+  heading = paste("type=",opts[i])
+  plot(x, y, type="n", main=heading)
+  lines(x, y, type=opts[i])
+}
+```
+    <hr>
+    <li>
+        <h3>1.5 Histograma:</h3>
+        <p>Gráfico formado por retângulos cujas bases são proporcional ás amplitudes de classes e as alturas proporcionais às frequências.</p>
+    </li>
+    <h4><i>Código para plotar o histograma: </i></h4>
+```{r histograma-preco, message=FALSE, warning=FALSE, fig.width=10}
+dados_preco_filtrado <- dados_selecionados %>%
+  filter(Price < 4000000 & !is.na(Price))
+
+ggplot(dados_preco_filtrado, aes(x = Price)) +
+  geom_histogram(binwidth = 100000, fill = "darkcyan", color = "white") +
+  
+  geom_density(aes(y = ..count.. * 100000), color = "red", linewidth = 1) +
+  
+  scale_x_continuous(labels = dollar_format(prefix = "AUD$ ", big.mark = ".")) +
+  labs(
+    title = "Distribuição dos Preços dos Imóveis em Melbourne",
+    subtitle = "A maioria dos imóveis se concentra na faixa de até AUD$ 1.5 milhão",
+    x = "Preço do Imóvel",
+    y = "Frequência (Contagem de Imóveis)"
+  ) +
+  theme_light()
+```
+    <hr>
+    <li>
+        <h3>1.6 Box plot (diagrama de caixa):</h3>
+        <p>O diagrama de caixa é uma apresentação gráfica que descreve simultaneamente varias
+características importantes de um conjunto de dados, tais como centro, dispersão, desvio de simetria
+e identificação de observações que estão, não geralmente, longe do seio dos dados (outliers).</p>
+    </li>
+    <h4><i>Código para plotar o Box plot: </i></h4>
+```{r boxplot-preco-por-tipo, message=FALSE, warning=FALSE, fig.width=10}
+# Novamente, filtramos preços extremos para uma visualização mais clara das caixas.
+dados_boxplot_filtrado <- dados_selecionados %>%
+  filter(Price < 3000000 & !is.na(Price))
+
+ggplot(dados_boxplot_filtrado, aes(x = Type, y = Price, fill = Type)) +
+  # geom_boxplot() é a função que cria o diagrama de caixa.
+  geom_boxplot() +
+  
+  # Opcional: Adiciona os pontos de dados individuais com alguma transparência
+  # geom_jitter(width = 0.2, alpha = 0.1) + 
+  
+  scale_y_continuous(labels = dollar_format(prefix = "AUD$ ", big.mark = ".")) +
+  scale_fill_brewer(palette = "Pastel1") + # Paleta de cores suave
+  labs(
+    title = "Comparação de Preços por Tipo de Imóvel",
+    subtitle = "Casas ('h') apresentam maior mediana e maior variação de preço",
+    x = "Tipo de Imóvel",
+    y = "Preço do Imóvel"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(legend.position = "none") # Remove a legenda, pois as cores já estão no eixo X
+```
+    <hr>
+    <li>
+        <h3>1.7 Polígono de frequência:</h3>
+        <p>Gráfico de linhas que une os pontos médios das classes no topo dos retângulos.</p>
+    </li>
+    <h4><i>Código para plotar o Polígono de frequência: </i></h4>
+```{r poligono-frequencia-area, message=FALSE, warning=FALSE, fig.width=10}
+dados_area_filtrado <- dados_selecionados %>%
+  filter(BuildingArea > 10 & BuildingArea < 500 & !is.na(BuildingArea))
+
+ggplot(dados_area_filtrado, aes(x = BuildingArea)) +
+  # geom_freqpoly() é a função para criar o polígono de frequência.
+  # 'binwidth' define a largura das "classes" invisíveis, assim como no histograma.
+  geom_freqpoly(binwidth = 20, color = "darkgreen", linewidth = 1.2) +
+  
+  labs(
+    title = "Polígono de Frequência da Área Construída dos Imóveis",
+    subtitle = "Picos de concentração em torno de 100-150 m²",
+    x = "Área Construída (em m²)",
+    y = "Frequência (Contagem de Imóveis)"
+  ) +
+  theme_light(base_size = 14)
+```
+    <hr>
+    <li>
+        <h3>1.8 Ogiva (para dados contínuos):</h3>
+        <p>Gráficos de frequências acumuladas (“abaixo de” e “acima de”).</p>
+    </li>
+    <h4><i>Código para plotar a Ogiva: </i></h4>
+```{r ogiva-distancia-simplificada, message=FALSE, warning=FALSE, fig.width=10, fig.height=7}
+# --- 1. Preparação dos Dados (está correta) ---
+dados_ogiva_distancia <- dados_selecionados %>%
+  filter(!is.na(Distance))
+
+# --- 2. VERIFICAÇÃO DE SEGURANÇA ---
+if (nrow(dados_ogiva_distancia) > 0) {
+  
+  # --- 3. Geração do Gráfico (Versão Simplificada e Segura) ---
+  print(
+    ggplot(dados_ogiva_distancia, aes(x = Distance)) +
+      stat_ecdf(geom = "line", linewidth = 1.2, color = "darkviolet") +
+      geom_hline(yintercept = 0.5, linetype = "dashed", color = "red", linewidth = 1) +
+      geom_hline(yintercept = c(0.25, 0.75), linetype = "dotted", color = "darkgray", linewidth = 1) +
+      
+      # Usando textos sem acentos para evitar os warnings
+      scale_y_continuous(labels = percent_format(), name = "Frequencia Acumulada Percentual") +
+      
+      # A linha complexa 'scale_x_continuous' foi removida.
+      # Deixamos o ggplot escolher os melhores pontos para o eixo X.
+      
+      labs(
+        title = "Ogiva da Distancia dos Imoveis ao Centro (CBD)",
+        subtitle = "Distribuicao cumulativa da localizacao dos imoveis",
+        caption = "Linha vermelha tracejada indica a Mediana da Distancia",
+        x = "Distancia do Centro (em km)" # O nome do eixo X é definido aqui
+      ) +
+      theme_bw(base_size = 14)
+  )
+  
+} else {
+  print("A tabela de dados para a ogiva está vazia.")
+}
+```
 </ul>
+</div>
+
+<div>
+<h2><b>2 MEDIDAS DE POSIÇÃO</b></h2>
+<h3>2.1 Média aritmética simples</h3>
+<h3>2.2 Média aritmética ponderada</h3>
+<h3>2.3 Moda</h3>
+<h3>2.4 Mediana</h3>
+<h3>2.5 Quartis</h3>
+<h3>2.6 Decis</h3>
+<h3>2.7 Percentis</h3>
+</div>
+
+<div>
+<h2><b>3 MEDIDAS DE DISPERSÃO</b></h2>
+<h3>3.1 Amplitude total</h3>
+<h3>3.2 Desvio médio</h3>
+<h3>3.3 Variância</h3>
+<h3>3.4 Desvio padrão</h3>
+<h3>3.5 Coeficiente de variação</h3>
+</div>
+
+<h1><b>RESULTADOS</b></h1>
+<h1><b>DISCUSSÃO</b></h1>
+<h1><b>CONCLUSÃO</b></h1>
+<div>
+<h1><b>BIBLIOGRAFIA<b></h1>
+<p>Apostila de Estatística – Prof.ª Vânia Maria de Oliveira (UFU – Monte Carmelo)</p>
+<p>Plataforma Kaggle: https://www.kaggle.com/</p>
+<p>Wickham, H. ggplot2: Elegant Graphics for Data Analysis. Springer.</p>
+<p>Documentação dos pacotes R: dplyr, ggplot2, stringr, DT</p>
+<p>Etc.</p>
+<div>
